@@ -1,0 +1,56 @@
+# k8s/mpi-worker.yaml
+# StatefulSet para workers MPI
+# Cada pod recebe um hostname estável: mpi-worker-0, mpi-worker-1, ...
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mpi-worker
+  labels:
+    app: mpi-worker
+spec:
+  # Headless service: permite resolução DNS de cada pod individualmente
+  # mpi-worker-0.mpi-worker.default.svc.cluster.local
+  clusterIP: None
+  selector:
+    app: mpi-worker
+  ports:
+    - name: ssh
+      port: 22
+      targetPort: 22
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mpi-worker
+spec:
+  serviceName: "mpi-worker"
+  replicas: 3          # Ajuste conforme necessário (número de workers)
+  selector:
+    matchLabels:
+      app: mpi-worker
+  template:
+    metadata:
+      labels:
+        app: mpi-worker
+    spec:
+      containers:
+        - name: mpi-worker
+          image: mpi-counter:latest
+          imagePullPolicy: Never   # Usa imagem local do kind
+          env:
+            - name: ROLE
+              value: "worker"
+          ports:
+            - containerPort: 22
+          # Garante que cada pod termine em um nó diferente do cluster kind
+          # (requer que o cluster kind tenha múltiplos nós worker)
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: mpi-worker
+                topologyKey: "kubernetes.io/hostname"

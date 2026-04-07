@@ -1,0 +1,25 @@
+# k8s/kind-cluster.yaml
+# Configuração do cluster kind com 1 control-plane + 3 workers
+# Cada nó kind simula um host físico distinto para fins MPI
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: mpi-cluster
+
+nodes:
+  - role: control-plane
+
+  - role: worker
+    # Nó worker 1 — simulará um "host" MPI
+    labels:
+      mpi-node: "true"
+
+  - role: worker
+    # Nó worker 2
+    labels:
+      mpi-node: "true"
+
+  - role: worker
+    # Nó worker 3
+    labels:
+      mpi-node: "true"

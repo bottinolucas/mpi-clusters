@@ -1,0 +1,41 @@
+# k8s/mpi-master.yaml
+# Job Kubernetes para o processo master MPI
+# O master coordena o mpirun e termina após a execução
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mpi-master
+spec:
+  ttlSecondsAfterFinished: 120   # Remove o job 2min após completar
+  template:
+    metadata:
+      labels:
+        app: mpi-master
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: mpi-master
+          image: mpi-counter:latest
+          imagePullPolicy: Never
+          env:
+            - name: ROLE
+              value: "master"
+            - name: N
+              value: "20"        # Contar de 0 até 20
+            - name: NP
+              value: "4"         # Total de processos MPI (1 master + 3 workers)
+            # Nomes DNS estáveis dos workers via headless service
+            - name: WORKER_HOSTS
+              value: "mpi-worker-0.mpi-worker,mpi-worker-1.mpi-worker,mpi-worker-2.mpi-worker"
+      # O master pode rodar em qualquer nó (inclusive junto com um worker)
+      # mas preferencialmente em nó separado
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: mpi-worker
+                topologyKey: "kubernetes.io/hostname"
