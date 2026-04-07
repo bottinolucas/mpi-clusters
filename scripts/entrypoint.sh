@@ -25,7 +25,7 @@ if [ "$ROLE" = "master" ]; then
     if [ -n "$WORKER_HOSTS" ]; then
         IFS=',' read -ra WORKERS <<< "$WORKER_HOSTS"
         for w in "${WORKERS[@]}"; do
-            echo "$w slots=1" >> "$HOSTFILE"
+            echo "$w slots=5" >> "$HOSTFILE"
         done
     fi
 
@@ -36,6 +36,7 @@ if [ "$ROLE" = "master" ]; then
     echo "Executando: mpirun -np $NP --hostfile $HOSTFILE ./counter $N"
     mpirun -np "$NP" \
            --hostfile "$HOSTFILE" \
+           --mca plm_rsh_args "-o StrictHostKeyChecking=no" \
            --allow-run-as-root \
            ./counter "$N"
 
