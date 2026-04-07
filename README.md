@@ -160,8 +160,7 @@ kind delete cluster --name mpi-cluster
 
 | Nome | RA |
 |------|----|
-|      |    |
-|      |    |
-|      |    |
-|      |    |
-|      |    |
+|   Lucas Bottino   |  -  |
+|    Gabriel Moura  |  -  |
+|    Gabriel Castelo  |  -  |
+|   Cauã Matheus   |  -  |
