@@ -39,7 +39,7 @@ spec:
           image: mpi-counter:latest
           imagePullPolicy: Never   # Usa imagem local do kind
           env:
-            - name: ROLE
+            - name: "ROLE"
               value: "worker"
           ports:
             - containerPort: 22
