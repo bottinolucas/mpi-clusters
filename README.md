@@ -133,6 +133,50 @@ O kind simula isso criando múltiplos containers Docker como se fossem VMs/hosts
    mpirun -np 4 --hostfile hosts.txt ./counter 20
    ```
 
+### Alternativa com Docker 
+
+Também é possível simular um cluster MPI utilizando múltiplos containers Docker conectados em uma rede privada
+
+1. Criar rede Docker 
+```bash 
+docker network create mpi-clusters-net
+```
+
+2. Build da imagem 
+```bash 
+docker build -t mpi-counter . 
+```
+
+3. Subir os nós (containers)
+```bash 
+docker run -dit --name master --network mpi-counter-net mpi-counter
+docker run -dit --name worker --network mpi-counter-net mpi-counter
+```
+
+4. Acessar nó master
+```bash
+docker exec -it master bash
+```
+
+5. Criar arquivo de hosts
+```bash 
+printf "node1 slots=2\nnode2 slots=2\n" > hosts.txt
+```
+
+6. Executar o programa MPI 
+```bash 
+mpirun --allow-run-as-root --hostfile hosts.txt -np 4 ./counter 20
+```
+
+**Saída esperada**
+```
+[proc 0 | node1] -> 0
+[proc 1 | node1] -> 1
+[proc 2 | node2] -> 2
+[proc 3 | node2] -> 3
+...
+```
+
 ---
 
 ## Comandos úteis
