@@ -79,38 +79,25 @@ int main(int argc, char *argv[]) {
     MPI_Get_processor_name(hostname, &namelen);
     get_ip(ip);
 
-    if (rank == 0) {
+    int prev = rank == 0 ? size - 1 : rank - 1;
+    int next = (rank + 1) % size;
+
+    if(rank == 0) {
         token = 0;
-        while (token <= N) {
-            printf("Rank %d | %s | %s | imprime: %d\n", rank, ip, hostname, token);
-            fflush(stdout);
-            token++;
-            if (token <= N)
-                MPI_Send(&token, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
-            else {
-                int fim = N + 1;
-                MPI_Send(&fim, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
-            }
-            if (token <= N)
-                MPI_Recv(&token, 1, MPI_INT, size - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            else
-                break;
-        }
-    } else {
-        while (1) {
-            MPI_Recv(&token, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            if (token > N) {
-                if (rank != size - 1)
-                    MPI_Send(&token, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-                break;
-            }
-            printf("Rank %d | %s | %s | imprime: %d\n", rank, ip, hostname, token);
-            fflush(stdout);
-            token++;
-            int next = (rank + 1) % size;
-            MPI_Send(&token, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
-        }
+        printf("[proc %d | %s | %s] -> %d\n", rank, hostname, ip, token);
+        MPI_Send(&token, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
     }
+    
+    do {
+        // Recebe do buffer
+        MPI_Recv(&token, 1, MPI_INT, prev, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (token < N) {
+            token++;
+            printf("[proc %d | %s | %s] -> %d\n", rank, hostname, ip, token);
+            fflush(stdout);
+        }
+        MPI_Send(&token, 1, MPI_INT, next, 0, MPI_COMM_WORLD);
+    } while(token < N);
 
     MPI_Finalize();
     return 0;
